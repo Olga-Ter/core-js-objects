@@ -351,33 +351,139 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+class MyBaseClassCssSelector {
+  obj = {};
+
+  constructor(selector, value) {
+    this[selector](value);
+  }
+
+  element(value) {
+    if ('element' in this.obj)
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    else if (this.checkOrder(this.order.indexOf('element') + 1))
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    else this.obj.element = value;
+    return this;
+  }
+
+  id(value) {
+    if ('id' in this.obj)
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    else if (this.checkOrder(this.order.indexOf('id') + 1))
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    else this.obj.id = `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    if ('class' in this.obj) this.obj.class += `.${value}`;
+    else if (this.checkOrder(this.order.indexOf('class') + 1))
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    else this.obj.class = `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    if ('attr' in this.obj) this.obj.attr += `[${value}]`;
+    else if (this.checkOrder(this.order.indexOf('attr') + 1))
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    else this.obj.attr = `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    if ('pseudoClass' in this.obj) this.obj.pseudoClass += `:${value}`;
+    else if (this.checkOrder(this.order.indexOf('pseudoClass') + 1))
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    else this.obj.pseudoClass = `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    if ('pseudoElement' in this.obj)
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    else this.obj.pseudoElement = `::${value}`;
+    return this;
+  }
+
+  stringify() {
+    const ans = Object.values(this.obj).join('');
+    this.obj = {};
+    return ans;
+  }
+
+  checkOrder(index) {
+    let checkVal = false;
+    for (let i = index; i < this.order.length; i += 1) {
+      if (this.order[i] in this.obj) checkVal = true;
+    }
+    return checkVal;
+  }
+}
+
+MyBaseClassCssSelector.prototype.order = [
+  'element',
+  'id',
+  'class',
+  'attr',
+  'pseudoClass',
+  'pseudoElement',
+];
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  ans: '',
+  element(value) {
+    return new MyBaseClassCssSelector('element', value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new MyBaseClassCssSelector('id', value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new MyBaseClassCssSelector('class', value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new MyBaseClassCssSelector('attr', value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new MyBaseClassCssSelector('pseudoClass', value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new MyBaseClassCssSelector('pseudoElement', value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    if (typeof selector2 === 'string')
+      this.ans = `${selector1.stringify()} ${combinator} ${this.ans}`;
+    else {
+      this.ans = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    }
+    return this;
+  },
+
+  stringify() {
+    return this.ans;
   },
 };
 
